@@ -91,20 +91,16 @@ def load_image(path):
 def my_callback():
     st.write("Audio input has changed!")
 
-# # Function to send the audio to the API
-def send_audio_to_api(audio_file_path, file_type):
+# Function to send the audio to the API
+def send_audio_to_api(audio_file_path):
     """Function to send recorded audio to the API."""
     with open(audio_file_path, "rb") as f:
-        if file_type == 'mp3':
-            # Send the MP3 file to the API
-            files = {"audio_file": ("audio.mp3", f, "audio/mp3")}
-        else:
-            # If it's a different file type, handle accordingly (e.g., WAV)
-            files = {"audio_file": ("audio.wav", f, "audio/wav")}
+        files = {"audio_file": ("audio.wav", f, "audio/wav")}
 
         response = requests.post(post_api, files=files)
 
         if response.status_code == 200:
+            # st.success("Audio successfully sent for analysis!")
             try:
                 result = response.json()
                 prediction = result.get('predicted_cluster')
@@ -115,10 +111,16 @@ def send_audio_to_api(audio_file_path, file_type):
                         <img src="data:image/jpg;base64,{load_image(cluster_img_path)}" style="max-width: 500px; width: 100%; height: auto; display: inline-block;">
                     </div>
                 ''', unsafe_allow_html=True)
+                # st.write(f'''
+                #     <div style="text-align: center;">
+                #         <img src="data:image/jpg;base64,{load_image(cluster_img_path)}" style="width: 400px; height: 400px; display: inline-block;">
+                #     </div>
+                # ''', unsafe_allow_html=True)
             except ValueError:
                 st.error("Error: Unable to parse response from the API.")
         else:
             st.error(f"Failed to send audio. Status code: {response.status_code} - {response.text}")
+
 
 # Audio File Uploader
 audio_file = st.file_uploader("Give me an audio file:",
@@ -130,27 +132,33 @@ audio_file = st.file_uploader("Give me an audio file:",
 
 # If an audio file is uploaded
 if audio_file:
-    st.audio(audio_file.getvalue(), format="audio/mp3")  # Display audio in mp3 format
+    st.audio(audio_file.getvalue(), format="audio/wav")
+    # st.write("File uploaded successfully!")
 
     # Read file as bytes
     audio_file_bytes = audio_file.getvalue()
+    # st.write(f"File size: {len(audio_file_bytes) / 1024:.2f} KB")
 
     # Extract file type from extension (either mp3, flac, or wav)
     file_type = audio_file.name.split(".")[-1]
 
-    if file_type == "mp3":
-        # Send the audio file as is (no conversion)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_mp3:
-            temp_mp3.write(audio_file_bytes)
-            temp_mp3.close()
-            send_audio_to_api(temp_mp3.name, file_type)  # Send .mp3 file directly to the API
+    # Convert audio to WAV if it's not already in WAV format
+    if file_type != "wav":  # If not WAV, convert to WAV
+        audio = AudioSegment.from_file(io.BytesIO(audio_file_bytes), format=file_type)
+        audio_bytes = io.BytesIO()
+        audio.export(audio_bytes, format="wav")
+        audio_bytes.seek(0)
+        # Save the audio as a temporary WAV file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_wav:
+            temp_wav.write(audio_bytes.read())
+            temp_wav.close()
+            send_audio_to_api(temp_wav.name)
     else:
-        # Handle other file types like WAV, FLAC, etc.
+        # If it's already a WAV file, just send it
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_wav:
             temp_wav.write(audio_file_bytes)
             temp_wav.close()
-            send_audio_to_api(temp_wav.name, "wav")
-
+            send_audio_to_api(temp_wav.name)
 
 # Streamlit UI - Record Audio (Second)
 st.markdown('''<br>
