@@ -208,5 +208,3 @@ if recording:
             st.error(f"Error processing audio: {e}")
     else:
         st.error("Error: Recorded audio is not in the expected format.")
-
-# fix recording
