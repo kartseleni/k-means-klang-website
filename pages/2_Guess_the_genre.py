@@ -72,23 +72,27 @@ col1, col2 = st.columns([1, 1])  # Adjusted columns to balance the layout
 with col1:
     st.markdown("<br>" * 3, unsafe_allow_html=True)
     audio1 = st.audio("audios/nocturne_op9.mp3", format="audio/mp3")
-    st.write("▶️ Frédéric Chopin")
-    if audio1:
+    toggle1 = st.checkbox("Frédéric Chopin")
+    if toggle1:
         st.write("Classical")
-
+    else:
+        st.write("")
 
     st.markdown("<br>" * 3, unsafe_allow_html=True)
     audio2 = st.audio("audios/purple_haze.mp3", format="audio/mp3")
-    st.write("▶️ Jimmy Henrix")
-    if audio2:
+    toggle2 = st.checkbox("Jimmy Henrix")
+    if toggle2:
         st.write("Rock")
-
+    else:
+        st.write("")
 
     st.markdown("<br>" * 4, unsafe_allow_html=True)
     audio3 = st.audio("audios/mashrou_we_need.mp3", format="audio/mp3")
-    st.write("▶️ Mashrou Leila")
-    if audio3:
+    toggle3 = st.checkbox("Mashrou Leila")
+    if toggle3:
         st.write("We don't know either")
+    else:
+        st.write("")
 
 
 with col2:
